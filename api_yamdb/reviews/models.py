@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from django.core.validators import MaxValueValidator, MinValueValidator
+from users.models import User
 
 
 class Categories(models.Model):
@@ -79,13 +79,14 @@ class Reviews(models.Model):
         User, on_delete=models.CASCADE, related_name='reviews_author',
         verbose_name="Автор"
     )
-    score = models.IntegerField()
+    score = models.IntegerField(validators=[MinValueValidator(0),
+                                            MaxValueValidator(10)])
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации', auto_now_add=True
     )
     title = models.ForeignKey(
         Titles, on_delete=models.CASCADE, related_name='title',
-        verbose_name="Комментарий"
+        verbose_name="Произведение"
     )
 
     class Meta:
