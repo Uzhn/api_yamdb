@@ -12,6 +12,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
+AUTH_USER_MODEL = 'users.User'
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -22,6 +25,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'reviews.apps.ReviewsConfig',
+    'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
+    'rest_framework',
 ]
 
 
@@ -41,11 +47,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-<<<<<<< HEAD
-        'DIRS': [BASE_DIR/'templates'],
-=======
-        'DIRS': [BASE_DIR / 'templates'],
->>>>>>> 106586161fcdf6e9c4e05ccf27ec7797cb1cb2d9
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
