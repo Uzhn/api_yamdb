@@ -21,8 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'titles.apps.TitlesConfig',
-    ]
+    'reviews.apps.ReviewsConfig',
+]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -40,7 +41,11 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+<<<<<<< HEAD
         'DIRS': [BASE_DIR/'templates'],
+=======
+        'DIRS': [BASE_DIR / 'templates'],
+>>>>>>> 106586161fcdf6e9c4e05ccf27ec7797cb1cb2d9
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
