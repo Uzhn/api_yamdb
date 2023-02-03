@@ -1,5 +1,5 @@
 from rest_framework.pagination import PageNumberPagination
 
 
-class CatsPagination(PageNumberPagination):
+class PagePaginations(PageNumberPagination):
     page_size = 5

@@ -14,7 +14,7 @@ class GenreAdmin(admin.ModelAdmin):
 
 
 class TitlesAdmin(admin.ModelAdmin):
-    list_display = ("pk", "category", "name", "year", "description", "genre")
+    list_display = ("pk", "category", "name", "year", "description")
     empty_value_display = "-пусто-"
 
 
@@ -24,7 +24,7 @@ class ReviewsAdmin(admin.ModelAdmin):
 
 
 class CommentsAdmin(admin.ModelAdmin):
-    list_display = ("pk", "text", "author", "pub_date")
+    list_display = ("pk", "text", "author", "review", "pub_date")
     empty_value_display = "-пусто-"
 
 

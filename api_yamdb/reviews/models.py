@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 from users.models import User
 
 
@@ -58,11 +58,7 @@ class Titles(models.Model):
         verbose_name='Год создания'
     )
     description = models.TextField()
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name='Жанр'
-    )
+    genre = models.ManyToManyField(Genre)
 
     class Meta:
         verbose_name = "Произведение"
@@ -109,7 +105,7 @@ class Comments(models.Model):
     )
     review = models.ForeignKey(
         Reviews, on_delete=models.CASCADE,
-        verbose_name="Отзыв"
+        verbose_name="Отзыв", related_name='review',
     )
 
     class Meta:
