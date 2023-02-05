@@ -76,6 +76,10 @@ class UserViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def user_registration(request):
     """Функция регистрации пользователя."""
+    username = request.data.get('username')
+    email = request.data.get('email')
+    user, created = User.objects.get_or_create(username=username, email=email)
+    send_confirmation_code(user)
     serializer = AuthUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
