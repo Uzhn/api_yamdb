@@ -59,8 +59,7 @@ class Title(models.Model):
     )
     name = models.CharField(
         max_length=256,
-        unique=True
-    )
+        )
     year = models.IntegerField(
         verbose_name='Год создания'
     )
