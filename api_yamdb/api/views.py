@@ -10,12 +10,14 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from api.serializers import (AuthUserSerializer, TokenUserSerializer,
-                             UserSerializer
+                             UserSerializer, TitlesSerializer,
+                             GenresSerializer, CategoriesSerializer
                              )
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import IsSuperUserOrIsAdmin
 
 from users.models import User
+from reviews.models import Title, Genre, Category
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -110,3 +112,25 @@ def get_token_for_user(request):
     access_token = AccessToken.for_user(user)
     message = {'token': str(access_token)}
     return Response(message, status=status.HTTP_200_OK)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitlesSerializer
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategoriesSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenresSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', )
