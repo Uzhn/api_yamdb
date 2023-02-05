@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from users.models import User
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(
         max_length=256,
         unique=True
@@ -42,9 +42,9 @@ class Genre(models.Model):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Произведение',
@@ -69,7 +69,7 @@ class Titles(models.Model):
         return self.name
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     text = models.TextField(verbose_name="Текст")
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews_author',
@@ -81,7 +81,7 @@ class Reviews(models.Model):
         verbose_name='Дата публикации', auto_now_add=True
     )
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='title',
+        Title, on_delete=models.CASCADE, related_name='title',
         verbose_name="Произведение"
     )
 
@@ -89,6 +89,17 @@ class Reviews(models.Model):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         ordering = ("-pub_date",)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            ),
+        )
+
+    def clean(self):
+        if Review.objects.filter(author=self.author).exists():
+            raise ValidationError("Попытка подписаться на себя!")
+        super(Review, self).clean()
 
     def __str__(self):
         return self.text
@@ -104,7 +115,7 @@ class Comments(models.Model):
         verbose_name='Дата публикации', auto_now_add=True
     )
     review = models.ForeignKey(
-        Reviews, on_delete=models.CASCADE,
+        Review, on_delete=models.CASCADE,
         verbose_name="Отзыв", related_name='review',
     )
 

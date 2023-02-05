@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from reviews.models import Titles, Reviews, Genre, Categories
+from reviews.models import Title, Review, Genre, Category
 from users.models import User
 from api.serializers import (AuthUserSerializer, TokenUserSerializer,
                              UserSerializer, TitlesSerializer,
@@ -18,7 +18,8 @@ from api.serializers import (AuthUserSerializer, TokenUserSerializer,
                              ReviewsSerializer, CommentsSerializer
                              )
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
-from api.permissions import IsSuperUserOrIsAdmin
+from api.permissions import (IsSuperUserOrIsAdmin,
+                             UserAuthOrModOrAdminOrReadOnly)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -116,22 +117,21 @@ def get_token_for_user(request):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     search_fields = ('name',)
 
     def get_queryset(self):
-        queryset = (Titles.objects.annotate(rating=Avg('title__score')).
+        queryset = (Title.objects.annotate(rating=Avg('title__score')).
                     order_by('-rating'))
         return queryset
 
 
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Categories.objects.all()
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -144,10 +144,13 @@ class GenreViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     pagination_class = PagePaginations
+    permission_classes = (
+        UserAuthOrModOrAdminOrReadOnly,
+    )
 
     def select_objects(self):
         title_id = self.kwargs.get("title_id")
-        return get_object_or_404(Titles, pk=title_id)
+        return get_object_or_404(Title, pk=title_id)
 
     def get_queryset(self):
         titles = self.select_objects()
@@ -157,12 +160,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     #     titles = self.select_objects()
     #     return titles.title.all()[kwargs['pk']]
 
-    def get_object(self):
-        titles = self.select_objects()
-        try:
-            return titles.title.all()[int(self.kwargs.get('pk'))-1]
-        except Exception as error:
-            raise serializers.ValidationError("Нету такой страницы", error)
+    # def get_object(self):
+    #     titles = self.select_objects()
+    #     try:
+    #         return titles.title.all()[int(self.kwargs.get('pk'))-1]
+    #     except Exception as error:
+    #         raise serializers.ValidationError("Нету такой страницы", error)
 
     def perform_create(self, serializer):
         new = self.select_objects()
@@ -172,10 +175,13 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     pagination_class = PagePaginations
+    permission_classes = (
+        UserAuthOrModOrAdminOrReadOnly,
+    )
 
     def select_objects(self):
         review_id = self.kwargs.get("review_id")
-        return get_object_or_404(Reviews, pk=review_id)
+        return get_object_or_404(Review, pk=review_id)
 
     def get_queryset(self):
         rev = self.select_objects()
