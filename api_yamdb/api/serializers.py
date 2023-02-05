@@ -1,10 +1,9 @@
 from rest_framework import serializers
 
 from users.models import User
-from reviews.models import Category, Genre, Title
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Reviews, Comments, Titles, Category, Genre
+from reviews.models import Reviews, Comments, Title, Category, Genre
 from users.models import User
 
 
@@ -91,7 +90,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if 'POST' in self.context.get('request').method:
             title_id = self.context['view'].kwargs.get('title_id')
-            title = get_object_or_404(Titles, pk=title_id)
+            title = get_object_or_404(Title, pk=title_id)
             author = self.context.get('request').user
             if Reviews.objects.filter(author=author, title=title).exists():
                 raise serializers.ValidationError(
