@@ -1,34 +1,40 @@
 from django.db import models
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(
         max_length=256,
-        unique=True
+        verbose_name='Категория'
     )
     slug = models.SlugField(
         max_length=50,
-        unique=True
+        unique=True,
+        verbose_name = 'Слаг'
     )
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
     name = models.CharField(
         max_length=256,
-        unique=True
+        verbose_name='Жанр'
     )
     slug = models.SlugField(
         max_length=50,
-        unique=True
+        unique=True,
+        verbose_name='Слаг'
     )
+    def __str__(self):
+        return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name='Произведение',
+        verbose_name='Категория',
         related_name='titles',
     )
     name = models.CharField(
