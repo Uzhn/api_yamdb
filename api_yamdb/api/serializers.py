@@ -3,7 +3,7 @@ from rest_framework import serializers
 from users.models import User
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Reviews, Comments, Title, Category, Genre
+from reviews.models import Review, Comments, Title, Category, Genre
 from users.models import User
 
 
@@ -85,7 +85,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        model = Reviews
+        model = Review
 
     def validate(self, data):
         if 'POST' in self.context.get('request').method:

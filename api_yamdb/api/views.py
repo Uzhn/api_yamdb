@@ -24,7 +24,7 @@ from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import IsSuperUserOrIsAdmin
 
 from users.models import User
-from reviews.models import Title, Genre, Category, Reviews
+from reviews.models import Title, Genre, Category, Review
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -136,6 +136,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    permission_classes = [IsSuperUserOrIsAdmin, ]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -182,7 +183,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def select_objects(self):
         review_id = self.kwargs.get("review_id")
-        return get_object_or_404(Reviews, pk=review_id)
+        return get_object_or_404(Review, pk=review_id)
 
     def get_queryset(self):
         rev = self.select_objects()

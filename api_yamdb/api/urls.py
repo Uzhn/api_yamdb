@@ -11,11 +11,11 @@ from api.views import (UserViewSet, user_registration, get_token_for_user,
 app_name = 'api'
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'title', TitleViewSet)
-router.register(r'genre', GenreViewSet)
-router.register(r'category', CategoryViewSet)
-router.register(r'titles/(?P<title_id>[\d]{1,})/reviews',
+router.register('users', UserViewSet, basename='user')
+router.register('titles', TitleViewSet)
+router.register('genres', GenreViewSet)
+router.register('categories', CategoryViewSet)
+router.register('titles/(?P<title_id>[\d]{1,})/reviews',
                 ReviewsViewSet, basename='reviews'
                 )
 router.register(
