@@ -19,7 +19,8 @@ from api.serializers import (AuthUserSerializer, TokenUserSerializer,
                              )
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import (IsSuperUserOrIsAdmin,
-                             UserAuthOrModOrAdminOrReadOnly)
+                             UserAuthOrModOrAdminOrReadOnly,
+                             Other)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -120,6 +121,9 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     search_fields = ('name',)
+    permission_classes = (
+        Other,
+    )
 
     def get_queryset(self):
         queryset = (Title.objects.annotate(rating=Avg('title__score')).
@@ -132,6 +136,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (
+        Other,
+    )
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -139,6 +146,9 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
+    permission_classes = (
+        Other,
+    )
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
