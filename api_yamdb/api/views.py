@@ -24,7 +24,6 @@ from api.serializers import (AuthUserSerializer, TokenUserSerializer,
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import (IsSuperUserOrIsAdmin,
                              UserAuthOrModOrAdminOrReadOnly,
-                             IsAnonimUser,
                              Other,
                              )
 
