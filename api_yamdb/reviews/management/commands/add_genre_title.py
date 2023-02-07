@@ -1,8 +1,10 @@
 import csv
+
 from django.conf import settings
-from reviews.models import Title, Genre
 from django.core.management.base import BaseCommand
+from reviews.models import Genre, Title
 from users.models import User
+
 
 class Command(BaseCommand):
     def handle(self, *args, **options):

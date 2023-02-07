@@ -1,31 +1,31 @@
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
-
-from rest_framework import status, viewsets, filters, mixins
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import viewsets, status, filters
-
+from django.core.mail import send_mail
 from django.db.models import Avg
-from .pagination import PagePaginations
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Genre, Review, Title
 
-from reviews.models import Title, Review, Genre, Category
-from users.models import User
-from api.serializers import (AuthUserSerializer, TokenUserSerializer,
-                             UserSerializer, TitlesSerializer,
-                             GenresSerializer, CategoriesSerializer,
-                             ReviewsSerializer, CommentsSerializer
-                             )
+from api.permissions import (IsSuperUserOrIsAdmin, Other,
+                             UserAuthOrModOrAdminOrReadOnly)
+from api.serializers import (AuthUserSerializer, CategoriesSerializer,
+                             CommentsSerializer, GenresSerializer,
+                             ReviewsSerializer, TitlesGetSerializer,
+                             TitlesSerializer, TokenUserSerializer,
+                             UserSerializer)
+
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
-from api.permissions import (IsSuperUserOrIsAdmin,
-                             UserAuthOrModOrAdminOrReadOnly,
-                             Other,
-                             )
+
+from users.models import User
+
+from .filters import TitleFilter
+from .pagination import PagePaginations
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -126,21 +126,29 @@ def get_token_for_user(request):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет модели Title."""
     queryset = Title.objects.all()
-    serializer_class = TitlesSerializer
     search_fields = ('name',)
     permission_classes = (Other, )
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
+    filterset_class = TitleFilter
 
     def get_queryset(self):
         queryset = (Title.objects.annotate(rating=Avg('title__score')).
                     order_by('-rating'))
         return queryset
 
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesGetSerializer
+        return TitlesSerializer
+
 
 class CategoryViewSet(viewsets.GenericViewSet,
                       mixins.CreateModelMixin,
                       mixins.ListModelMixin,
                       mixins.DestroyModelMixin):
+    """Вьюсет модели Category."""
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
@@ -148,10 +156,12 @@ class CategoryViewSet(viewsets.GenericViewSet,
     permission_classes = (Other,)
     lookup_field = 'slug'
 
+
 class GenreViewSet(viewsets.GenericViewSet,
                    mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    mixins.DestroyModelMixin):
+    """Вьюсет модели Genre."""
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
@@ -159,7 +169,9 @@ class GenreViewSet(viewsets.GenericViewSet,
     permission_classes = (Other, )
     lookup_field = 'slug'
 
+
 class ReviewsViewSet(viewsets.ModelViewSet):
+    """Вьюсет модели Review."""
     serializer_class = ReviewsSerializer
     pagination_class = PagePaginations
     permission_classes = (
@@ -174,23 +186,13 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         titles = self.select_objects()
         return titles.title.all()
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     titles = self.select_objects()
-    #     return titles.title.all()[kwargs['pk']]
-
-    # def get_object(self):
-    #     titles = self.select_objects()
-    #     try:
-    #         return titles.title.all()[int(self.kwargs.get('pk'))-1]
-    #     except Exception as error:
-    #         raise serializers.ValidationError("Нету такой страницы", error)
-
     def perform_create(self, serializer):
         new = self.select_objects()
         serializer.save(author=self.request.user, title=new)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет модели Comment."""
     serializer_class = CommentsSerializer
     pagination_class = PagePaginations
     permission_classes = (

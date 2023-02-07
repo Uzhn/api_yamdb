@@ -1,9 +1,9 @@
-from rest_framework import serializers
-
-from users.models import User
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Review, Comments, Title, Category, Genre
+from rest_framework import serializers
+
+from reviews.models import Category, Comments, Genre, Review, Title
+
 from users.models import User
 
 
@@ -76,6 +76,19 @@ class TitlesSerializer(serializers.ModelSerializer):
                   'genre', 'category'
                   )
         model = Title
+
+
+class TitlesGetSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(many=True)
+    category = CategoriesSerializer()
+    rating = serializers.IntegerField(required=False)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
+        model = Title
+        read_only_fields = ('id', 'name', 'year', 'rating', 'description',
+                            'genre', 'category')
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
