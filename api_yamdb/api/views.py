@@ -144,7 +144,14 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return TitlesSerializer
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class MixinsForCategoryAndGenres(viewsets.GenericViewSet,
+                                 mixins.CreateModelMixin,
+                                 mixins.ListModelMixin,
+                                 mixins.DestroyModelMixin):
+    pass
+
+
+class CategoryViewSet(MixinsForCategoryAndGenres):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
@@ -152,9 +159,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (
         Other,
     )
+    lookup_field = 'slug'
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(MixinsForCategoryAndGenres):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
@@ -162,6 +170,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     permission_classes = (
         Other,
     )
+    lookup_field = 'slug'
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
