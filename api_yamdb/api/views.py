@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import viewsets, status, serializers, filters
+from rest_framework import viewsets, status, filters
 
 from django.db.models import Avg
 from .pagination import PagePaginations
@@ -24,7 +24,9 @@ from api.serializers import (AuthUserSerializer, TokenUserSerializer,
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import (IsSuperUserOrIsAdmin,
                              UserAuthOrModOrAdminOrReadOnly,
-                             Other)
+                             IsAnonimUser,
+                             Other,
+                             )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -129,6 +131,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitlesSerializer
     search_fields = ('name',)
     lookup_field = 'slug'
+    permission_classes = (Other, )
 
     def get_queryset(self):
         queryset = (Title.objects.annotate(rating=Avg('title__score')).
@@ -139,12 +142,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = [IsSuperUserOrIsAdmin, ]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (
-        Other,
-    )
+    permission_classes = (Other, )
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -152,9 +152,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    permission_classes = (
-        Other,
-    )
+    permission_classes = (Other, )
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
