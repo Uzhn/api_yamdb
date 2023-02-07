@@ -86,6 +86,9 @@ class UserViewSet(viewsets.ModelViewSet):
 def user_registration(request):
     """Функция регистрации пользователя."""
     serializer = AuthUserSerializer(data=request.data)
+    if User.objects.filter(username=request.data.get('username'),
+                           email=request.data.get('email')).exists():
+        return Response(request.data, status=status.HTTP_200_OK)
     if serializer.is_valid():
         user = serializer.save()
         send_confirmation_code(user)
@@ -94,7 +97,7 @@ def user_registration(request):
 
 
 def send_confirmation_code(user):
-    """Фунуция отправки кода подтверждения."""
+    """Функция отправки кода подтверждения."""
     confirmation_code = default_token_generator.make_token(user)
     subject = 'YaMDB: код подтверждения'
     message = f'Ваш код для подтверждения: {confirmation_code}'
