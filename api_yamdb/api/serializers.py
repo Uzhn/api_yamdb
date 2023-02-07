@@ -44,16 +44,14 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ('id',)
-        lookup_field = 'slug'
+        fields = ('name', 'slug')
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
-        lookup_field = 'slug'
+        fields = ('name', 'slug')
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -74,6 +72,19 @@ class TitlesSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
                   'category')
         model = Title
+
+
+class TitlesGetSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(many=True)
+    category = CategoriesSerializer()
+    rating = serializers.IntegerField(required=False)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
+        model = Title
+        read_only_fields = ('id', 'name', 'year', 'rating', 'description',
+                            'genre', 'category')
 
 
 class ReviewsSerializer(serializers.ModelSerializer):

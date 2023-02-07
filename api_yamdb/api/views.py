@@ -9,13 +9,16 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import Title, Review, Genre, Category
+from .filters import TitleFilter
 from users.models import User
 from api.serializers import (AuthUserSerializer, TokenUserSerializer,
                              UserSerializer, TitlesSerializer,
                              GenresSerializer, CategoriesSerializer,
-                             ReviewsSerializer, CommentsSerializer
+                             ReviewsSerializer, CommentsSerializer,
+                             TitlesGetSerializer
                              )
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import (IsSuperUserOrIsAdmin,
@@ -82,6 +85,9 @@ class UserViewSet(viewsets.ModelViewSet):
 def user_registration(request):
     """Функция регистрации пользователя."""
     serializer = AuthUserSerializer(data=request.data)
+    if User.objects.filter(username=request.data.get('username'),
+                           email=request.data.get('email')).exists():
+        return Response(request.data, status=status.HTTP_200_OK)
     if serializer.is_valid():
         user = serializer.save()
         send_confirmation_code(user)
@@ -90,7 +96,7 @@ def user_registration(request):
 
 
 def send_confirmation_code(user):
-    """Фунуция отправки кода подтверждения."""
+    """Функция отправки кода подтверждения."""
     confirmation_code = default_token_generator.make_token(user)
     subject = 'YaMDB: код подтверждения'
     message = f'Ваш код для подтверждения: {confirmation_code}'
@@ -119,8 +125,10 @@ def get_token_for_user(request):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitlesSerializer
+    # serializer_class = TitlesSerializer
     search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
+    filterset_class = TitleFilter
     permission_classes = (
         Other,
     )
@@ -129,6 +137,11 @@ class TitlesViewSet(viewsets.ModelViewSet):
         queryset = (Title.objects.annotate(rating=Avg('title__score')).
                     order_by('-rating'))
         return queryset
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesGetSerializer
+        return TitlesSerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -140,6 +153,15 @@ class CategoryViewSet(viewsets.ModelViewSet):
         Other,
     )
 
+    def get_object(self):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, pk):
+        cat = get_object_or_404(Category, slug=pk)
+        cat.delete()
+        message = f'Категория {cat} удалена.'
+        return Response(message, status=status.HTTP_204_NO_CONTENT)
+
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
@@ -149,6 +171,15 @@ class GenreViewSet(viewsets.ModelViewSet):
     permission_classes = (
         Other,
     )
+
+    def get_object(self):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, pk):
+        genre = get_object_or_404(Genre, slug=pk)
+        genre.delete()
+        message = f'Жанр {genre} удален.'
+        return Response(message, status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
