@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, serializers, filters
+from rest_framework import viewsets, status, serializers, filters, mixins
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
@@ -24,6 +24,7 @@ from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from api.permissions import (IsSuperUserOrIsAdmin,
                              UserAuthOrModOrAdminOrReadOnly,
                              Other)
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -153,14 +154,15 @@ class CategoryViewSet(viewsets.ModelViewSet):
         Other,
     )
 
-    def get_object(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    # def get_object(self):
+    #     serializer = CategoriesSerializer()
+    #     return Response(serializer.data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def destroy(self, request, pk):
-        cat = get_object_or_404(Category, slug=pk)
-        cat.delete()
-        message = f'Категория {cat} удалена.'
-        return Response(message, status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, pk):
+    #     cat = get_object_or_404(Category, slug=pk)
+    #     cat.delete()
+    #     message = f'Категория {cat} удалена.'
+    #     return Response(message, status=status.HTTP_204_NO_CONTENT)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -172,14 +174,15 @@ class GenreViewSet(viewsets.ModelViewSet):
         Other,
     )
 
-    def get_object(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    # def get_object(self):
+    #     serializer = GenresSerializer(many=True)
+    #     return Response(serializer.data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def destroy(self, request, pk):
-        genre = get_object_or_404(Genre, slug=pk)
-        genre.delete()
-        message = f'Жанр {genre} удален.'
-        return Response(message, status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, pk):
+    #     genre = get_object_or_404(Genre, slug=pk)
+    #     genre.delete()
+    #     message = f'Жанр {genre} удален.'
+    #     return Response(message, status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
