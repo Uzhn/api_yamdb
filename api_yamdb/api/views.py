@@ -136,6 +136,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    permission_classes = [IsSuperUserOrIsAdmin, ]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     permission_classes = (
