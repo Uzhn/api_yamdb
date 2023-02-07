@@ -130,7 +130,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     search_fields = ('name',)
-    lookup_field = 'slug'
     permission_classes = (Other, )
 
     def get_queryset(self):
