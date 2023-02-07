@@ -26,7 +26,6 @@ from api.permissions import (IsSuperUserOrIsAdmin,
                              Other)
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет модели User."""
     queryset = User.objects.all()
@@ -154,16 +153,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
         Other,
     )
 
-    # def get_object(self):
-    #     serializer = CategoriesSerializer()
-    #     return Response(serializer.data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    # def destroy(self, request, pk):
-    #     cat = get_object_or_404(Category, slug=pk)
-    #     cat.delete()
-    #     message = f'Категория {cat} удалена.'
-    #     return Response(message, status=status.HTTP_204_NO_CONTENT)
-
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
@@ -173,16 +162,6 @@ class GenreViewSet(viewsets.ModelViewSet):
     permission_classes = (
         Other,
     )
-
-    # def get_object(self):
-    #     serializer = GenresSerializer(many=True)
-    #     return Response(serializer.data, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    # def destroy(self, request, pk):
-    #     genre = get_object_or_404(Genre, slug=pk)
-    #     genre.delete()
-    #     message = f'Жанр {genre} удален.'
-    #     return Response(message, status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
