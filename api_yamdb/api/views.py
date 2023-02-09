@@ -1,5 +1,4 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,20 +6,23 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly
+                                        )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
 
-from api.permissions import (IsSuperUserOrIsAdmin, Other,
-                             UserAuthOrModOrAdminOrReadOnly)
+from api.permissions import (IsSuperUserOrIsAdmin,
+                             IsSuperUserOrIsAdminOrReadOnly,
+                             IsAuthOrSuperUserOrModOrAdminOrReadOnly
+                             )
 from api.serializers import (AuthUserSerializer, CategoriesSerializer,
                              CommentsSerializer, GenresSerializer,
                              ReviewsSerializer, TitlesGetSerializer,
                              TitlesSerializer, TokenUserSerializer,
                              UserSerializer)
-
-from api_yamdb.settings import DEFAULT_FROM_EMAIL
+from api.utils import send_confirmation_code
 
 from users.models import User
 
@@ -47,12 +49,9 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
             serializer = UserSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         elif request.method == 'DELETE':
             user.delete()
             message = f'Пользователь {user} удален.'
@@ -72,12 +71,9 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(
                 request.user, data=request.data, partial=True
             )
-            if serializer.is_valid():
-                serializer.save(role=request.user.role)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -89,22 +85,13 @@ def user_registration(request):
     serializer = AuthUserSerializer(data=request.data)
     if User.objects.filter(username=request.data.get('username'),
                            email=request.data.get('email')).exists():
+        existing_user = User.objects.get(email=request.data.get('email'))
+        send_confirmation_code(existing_user)
         return Response(request.data, status=status.HTTP_200_OK)
-    if serializer.is_valid():
-        user = serializer.save()
-        send_confirmation_code(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-def send_confirmation_code(user):
-    """Функция отправки кода подтверждения."""
-    confirmation_code = default_token_generator.make_token(user)
-    subject = 'YaMDB: код подтверждения'
-    message = f'Ваш код для подтверждения: {confirmation_code}'
-    from_mail = DEFAULT_FROM_EMAIL
-    to_mail = [user.email]
-    return send_mail(subject, message, from_mail, to_mail)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
+    send_confirmation_code(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -129,7 +116,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Title."""
     queryset = Title.objects.all()
     search_fields = ('name',)
-    permission_classes = (Other, )
+    permission_classes = (IsSuperUserOrIsAdminOrReadOnly, )
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = TitleFilter
 
@@ -153,7 +140,7 @@ class CategoryViewSet(viewsets.GenericViewSet,
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (Other,)
+    permission_classes = (IsSuperUserOrIsAdminOrReadOnly,)
     lookup_field = 'slug'
 
 
@@ -166,7 +153,7 @@ class GenreViewSet(viewsets.GenericViewSet,
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    permission_classes = (Other, )
+    permission_classes = (IsSuperUserOrIsAdminOrReadOnly, )
     lookup_field = 'slug'
 
 
@@ -174,9 +161,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Review."""
     serializer_class = ReviewsSerializer
     pagination_class = PagePaginations
-    permission_classes = (
-        UserAuthOrModOrAdminOrReadOnly,
-    )
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsAuthOrSuperUserOrModOrAdminOrReadOnly, )
 
     def select_objects(self):
         title_id = self.kwargs.get("title_id")
@@ -195,9 +181,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Comment."""
     serializer_class = CommentsSerializer
     pagination_class = PagePaginations
-    permission_classes = (
-        UserAuthOrModOrAdminOrReadOnly,
-    )
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsAuthOrSuperUserOrModOrAdminOrReadOnly, )
 
     def select_objects(self):
         review_id = self.kwargs.get("review_id")

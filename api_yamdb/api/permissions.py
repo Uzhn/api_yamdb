@@ -10,23 +10,32 @@ class IsSuperUserOrIsAdmin(permissions.BasePermission):
         return (request.user.is_superuser or request.user.is_admin)
 
 
-class UserAuthOrModOrAdminOrReadOnly(permissions.BasePermission):
+class IsAuthOrSuperUserOrModOrAdminOrReadOnly(permissions.BasePermission):
+    """
+    Пермишн, является ли пользователь
+    автором/супер юзером/модератором/админом
+    или только безопасные методы.
+    """
 
-    def has_permission(self, request, view):
-        if view.action in ('list', 'retrieve'):
-            return request.method in permissions.SAFE_METHODS
-        else:
-            return bool(request.user and request.user.is_authenticated)
+    message = 'У вас нет прав доступа.'
 
     def has_object_permission(self, request, view, obj):
-        if request.user and request.user.is_authenticated:
-            return bool((obj.author == request.user and request.user.is_user)
-                        or request.user.is_moderator or request.user.is_admin)
-        elif request.method in permissions.SAFE_METHODS:
-            return True
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_authenticated
+                and (request.user.is_superuser
+                     or request.user.is_admin
+                     or request.user.is_moderator
+                     or request.user == obj.author)
+                )
 
 
-class Other(permissions.BasePermission):
+class IsSuperUserOrIsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Пермишн, является ли пользователь супер юзером/админом
+    или только безопасные методы.
+    """
+
+    message = 'У вас нет прав доступа.'
 
     def has_permission(self, request, view):
         return ((request.method in permissions.SAFE_METHODS)

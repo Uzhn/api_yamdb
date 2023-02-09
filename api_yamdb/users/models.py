@@ -1,46 +1,56 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
 
 
-class User(AbstractUser):
-    """Модель пользователя."""
+class UserRole(models.TextChoices):
+    """Роли пользователей."""
 
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
 
-    ROLE_CHOICES = [
-        (USER, 'user'),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin')
-    ]
 
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+$',
-            message='Имя пользователя содержит недопустимый символ'
-        )]
-    )
-    email = models.EmailField(max_length=254, unique=True)
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
+class User(AbstractUser):
+    """Модель пользователя."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.is_superuser:
+            self.role = UserRole.ADMIN
+
+    email = models.EmailField(verbose_name='Электронная почта',
+                              max_length=254,
+                              unique=True
+                              )
     bio = models.TextField(verbose_name='Биография', blank=True)
-    role = models.CharField(max_length=9, choices=ROLE_CHOICES, default=USER)
+    role = models.CharField(verbose_name='Роль пользователя',
+                            max_length=9,
+                            choices=UserRole.choices,
+                            default=UserRole.USER
+                            )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     @property
     def is_user(self):
-        return self.role == self.USER
+        return self.role == UserRole.USER
 
     @property
     def is_moderator(self):
-        return self.role == self.MODERATOR
+        return self.role == UserRole.MODERATOR
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return self.role == UserRole.ADMIN
+
+    # @property
+    # def is_staff(self):
+    #     return (self.role == UserRole.MODERATOR
+    #             or UserRole.ADMIN
+    #             or self.is_superuser
+    #             )
 
     def __str__(self):
         return self.username
