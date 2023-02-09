@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-
+from datetime import datetime
 from rest_framework import serializers
 
 from reviews.models import Category, Comments, Genre, Review, Title
@@ -42,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Category."""
 
     class Meta:
         model = Category
@@ -50,6 +51,7 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Genre."""
 
     class Meta:
         model = Genre
@@ -58,6 +60,7 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Title, POST."""
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -77,8 +80,19 @@ class TitlesSerializer(serializers.ModelSerializer):
                   )
         model = Title
 
+    def validate_year(self, data):
+        """Валидация года."""
+        if data > datetime.now().year:
+            raise serializers.ValidationError('Мы ещё не в будущем!')
+        elif data < 0:
+            raise serializers.ValidationError('Запрещены отрицательные',
+                                              'значения!'
+                                              )
+        return data
+
 
 class TitlesGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Title, GET."""
     genre = GenresSerializer(many=True)
     category = CategoriesSerializer()
     rating = serializers.IntegerField(required=False)
@@ -92,6 +106,7 @@ class TitlesGetSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Review."""
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
@@ -101,6 +116,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
+        """Валидация на уникальность и оценки."""
         if 'POST' in self.context.get('request').method:
             title_id = self.context['view'].kwargs.get('title_id')
             title = get_object_or_404(Title, pk=title_id)
@@ -109,10 +125,15 @@ class ReviewsSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Один пользователь, один отзыв!'
                 )
+        if data['score'] > 11 or data['score'] < 0:
+            raise serializers.ValidationError(
+                'Оценка только от 1 до 10!'
+            )
         return data
 
 
 class CommentsSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Comment."""
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )

@@ -1,11 +1,13 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
+from datetime import datetime
 from django.db import models
 
 from users.models import User
 
 
 class Category(models.Model):
+    """Модель категорий."""
     name = models.CharField(
         max_length=256,
         verbose_name='Категория'
@@ -29,6 +31,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель жанров."""
     name = models.CharField(
         max_length=256,
         verbose_name='Жанр'
@@ -51,7 +54,16 @@ class Genre(models.Model):
         return self.name
 
 
+def validate_year(value):
+    """Валидация года."""
+    if value > datetime.now().year:
+        raise ValidationError('Мы ещё не в будущем!')
+    elif value < 0:
+        raise ValidationError('Запрещены отрицательные значения!')
+
+
 class Title(models.Model):
+    """Модель произведений."""
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -61,10 +73,11 @@ class Title(models.Model):
     )
     name = models.CharField(max_length=256)
     year = models.IntegerField(
-        verbose_name='Год создания'
+        verbose_name='Год создания',
+        validators=[validate_year]
     )
-    description = models.TextField()
-    genre = models.ManyToManyField(Genre)
+    description = models.TextField(verbose_name='Описание',)
+    genre = models.ManyToManyField(Genre, verbose_name='Жанр')
 
     class Meta:
         verbose_name = "Произведение"
@@ -76,13 +89,16 @@ class Title(models.Model):
 
 
 class Review(models.Model):
+    """Модель обзоров."""
     text = models.TextField(verbose_name="Текст")
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews_author',
         verbose_name="Автор"
     )
-    score = models.IntegerField(validators=[MinValueValidator(0),
-                                            MaxValueValidator(10)])
+    score = models.IntegerField(validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)],
+                                verbose_name="Оценка"
+                                )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации', auto_now_add=True
     )
@@ -102,16 +118,12 @@ class Review(models.Model):
             ),
         )
 
-    def clean(self):
-        if Review.objects.filter(author=self.author).exists():
-            raise ValidationError("Попытка подписаться на себя!")
-        super(Review, self).clean()
-
     def __str__(self):
         return self.text
 
 
 class Comments(models.Model):
+    """Модель комментариев."""
     text = models.TextField(verbose_name="Текст")
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comment_author',
