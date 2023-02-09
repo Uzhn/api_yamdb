@@ -116,7 +116,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Title."""
     queryset = Title.objects.all()
     search_fields = ('name',)
-    permission_classes = (IsSuperUserOrIsAdminOrReadOnly, )
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsSuperUserOrIsAdminOrReadOnly, )
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = TitleFilter
 
@@ -140,7 +141,8 @@ class CategoryViewSet(viewsets.GenericViewSet,
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (IsSuperUserOrIsAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsSuperUserOrIsAdminOrReadOnly, )
     lookup_field = 'slug'
 
 
@@ -153,7 +155,8 @@ class GenreViewSet(viewsets.GenericViewSet,
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    permission_classes = (IsSuperUserOrIsAdminOrReadOnly, )
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsSuperUserOrIsAdminOrReadOnly, )
     lookup_field = 'slug'
 
 
