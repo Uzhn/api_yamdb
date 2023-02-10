@@ -8,15 +8,21 @@ class CategoriesAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
+class GenreshipInline(admin.TabularInline):
+    model = Title.genre.through
+
+
 class GenreAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "slug")
     empty_value_display = "-пусто-"
+    inlines = [GenreshipInline, ]
 
 
 class TitlesAdmin(admin.ModelAdmin):
     list_display = ("pk", "category", "name", "year", "description")
-    filter_horizontal = ['genre']
     empty_value_display = "-пусто-"
+    inlines = [GenreshipInline, ]
+    exclude = ('genre', )
 
 
 class ReviewAdmin(admin.ModelAdmin):

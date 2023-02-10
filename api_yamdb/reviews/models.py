@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from datetime import datetime
 from django.db import models
 
 from users.models import User
@@ -41,9 +42,6 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Слаг'
     )
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = "Жанр"
